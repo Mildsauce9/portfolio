@@ -6,6 +6,8 @@
   var q = $('q'), results = $('results'), resBody = $('resBody'), resMeta = $('resMeta');
   var cards = {}, pos = {}, view = { tx: 0, ty: 0, s: 1 }, fitView = null, stack = false, mode = 'schema', activeSet = [];
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var coarse = window.matchMedia('(pointer: coarse)').matches;
+  function isPhone() { return window.matchMedia('(max-width: 640px)').matches; }
 
   // Card positions in world coordinates (the world is 1360 wide).
   var LAYOUT = {
@@ -188,7 +190,7 @@
     if (v === null || v === undefined) return '<span class="nul">NULL</span>';
     if (typeof v === 'number') return '<span class="n">' + v + '</span>';
     if (typeof v === 'boolean') return '<span class="k">' + v + '</span>';
-    if (/^https?:\/\/\S+$/.test(v)) return '<a class="url" href="' + esc(v) + '" target="_blank" rel="noopener">' + esc(v.replace(/^https?:\/\/(www\.)?/, '')) + '</a>';
+    if (/^https?:\/\/\S+$/.test(v)) return '<a class="url" href="' + esc(v) + '" target="_blank" rel="noopener">' + esc(v.replace(/^https?:\/\/(www\.)?/, '')).replace(/\//g, '/<wbr>') + '</a>';
     if (/^\d{4}-\d{2}(-\d{2})?$/.test(v)) return '<span class="n">' + esc(v) + '</span>';
     return '<span class="s">\'' + esc(v) + '\'</span>';
   }
@@ -203,15 +205,6 @@
     var v = row[c], fk = r.table && DB[r.table].cols.indexOf(c) >= 0 ? fkOf(r.table, c) : null;
     if (fk && v != null) { var lbl = refLabel(fk.ref.split('.')[0], v); if (lbl) return fmt(v) + ' <span class="ref">' + esc(lbl) + '</span>'; }
     return fmt(v);
-  }
-  // Column widths from content: ids stay narrow, prose gets the room, nothing needs a sideways scroll.
-  function weights(r) {
-    return r.cols.map(function (c) {
-      var longest = c.length * 0.9, total = 0;
-      r.rows.forEach(function (row) { var n = row[c] == null ? 4 : String(row[c]).length; total += n; if (n > longest) longest = n; });
-      var avg = r.rows.length ? total / r.rows.length : 4;
-      return Math.max(c.length * 0.95 + 2, Math.min(60, Math.max(avg, longest * 0.35)));
-    });
   }
   function isMapping(r) {
     return r.table && /_mapping$/.test(r.table) && r.cols.length === DB[r.table].cols.length && r.cols.every(function (c, i) { return c === DB[r.table].cols[i]; });
@@ -232,16 +225,17 @@
   }
   function renderRows(r) {
     if (isMapping(r)) { resBody.innerHTML = renderMapping(r); return; }
-    var w = weights(r), sum = w.reduce(function (a, b) { return a + b; }, 0);
-    var h = '<div class="grid-wrap"><table class="grid fixed"><colgroup>' + w.map(function (x) { return '<col style="width:' + (x / sum * 100).toFixed(2) + '%">'; }).join('') + '</colgroup><thead><tr>' +
+    var h = '<div class="grid-wrap"><table class="grid"><thead><tr>' +
       r.cols.map(function (c) { return '<th scope="col">' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
     r.rows.forEach(function (row, i) { h += '<tr data-i="' + i + '" tabindex="0">' + r.cols.map(function (c) { return '<td data-label="' + esc(c) + '">' + cell(r, row, c) + '</td>'; }).join('') + '</tr>'; });
-    h += '</tbody></table></div><div id="detail"></div>';
+    h += '</tbody></table></div>';
     if (r.note) h += '<div class="note">' + esc(r.note) + '</div>';
     resBody.innerHTML = h;
-    if (r.rows.length && r.table !== 'highlights' && detailFor(r.table, r.rows[0])) selectRow(r, 0);
-    resBody.querySelectorAll('tbody tr').forEach(function (tr) {
-      var go = function () { selectRow(r, +tr.dataset.i); };
+    var expandable = r.rows.length && r.table !== 'highlights' && detailFor(r.table, r.rows[0]);
+    if (expandable) { selectRow(r, 0); resMeta.textContent += ' · click a row to expand it'; }
+    resBody.querySelectorAll('tbody tr[data-i]').forEach(function (tr) {
+      if (!expandable) { tr.style.cursor = 'default'; tr.removeAttribute('tabindex'); return; }
+      var go = function () { selectRow(r, +tr.dataset.i, true); };
       tr.addEventListener('click', go);
       tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     });
@@ -270,9 +264,18 @@
     if (table === 'case_studies') return window.CASES[s.slug] ? '<div class="detail">' + window.CASES[s.slug] + '</div>' : '';
     return '';
   }
-  function selectRow(r, i) {
-    resBody.querySelectorAll('tbody tr').forEach(function (tr) { tr.classList.toggle('sel', +tr.dataset.i === i); });
-    $('detail').innerHTML = detailFor(r.table, r.rows[i]);
+  // The detail opens directly under the row that was clicked, so the click and its answer are in the same place.
+  function selectRow(r, i, user) {
+    var rows = resBody.querySelectorAll('tbody tr[data-i]'), open = resBody.querySelector('tbody tr.sel'), old = resBody.querySelector('tr.detail-row');
+    if (old) old.remove();
+    var collapse = user && open && +open.dataset.i === i;
+    rows.forEach(function (tr) { var on = !collapse && +tr.dataset.i === i; tr.classList.toggle('sel', on); tr.setAttribute('aria-expanded', String(on)); });
+    if (collapse) return;
+    var html = detailFor(r.table, r.rows[i]); if (!html) return;
+    var d = document.createElement('tr'); d.className = 'detail-row';
+    d.innerHTML = '<td colspan="' + r.cols.length + '">' + html + '</td>';
+    rows[i].after(d);
+    if (user && d.scrollIntoView) d.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
   }
 
   function setActive(list) {
@@ -295,6 +298,7 @@
 
   function runQuery(text) {
     if (busy) return;
+    if (/^(help|\\\?|\?|\\h)$/i.test(text.trim())) { openGuide(); return; }
     var r = SQL.run(text);
     if (r.kind === 'msg' && !r.text && !r.action) return;
     if (r.action === 'clear') { closeResults(); return; }
@@ -321,11 +325,15 @@
     hi = history.length;
     runQuery(text);
   }
-  $('qform').addEventListener('submit', function (e) { e.preventDefault(); submit(q.value); q.select(); });
+  $('qform').addEventListener('submit', function (e) {
+    e.preventDefault(); submit(q.value);
+    if (coarse) q.blur(); else q.select();   // on a phone, drop the keyboard so the result is visible
+  });
+  $('qclear').addEventListener('click', function () { q.value = ''; q.focus(); });
 
   function typeThenRun(text) {
     if (busy) return;
-    q.value = ''; q.focus({ preventScroll: true });
+    q.value = ''; if (!coarse) q.focus({ preventScroll: true });
     if (reduce) { q.value = text; submit(text); return; }
     var i = 0, step = Math.max(3, Math.min(16, 1300 / text.length));
     var id = setInterval(function () { q.value = text.slice(0, ++i); if (i >= text.length) { clearInterval(id); setTimeout(function () { submit(text); }, 140); } }, step);
@@ -347,8 +355,7 @@
   var CHIPS = [
     ['my current role', 'SELECT e.title, c.name AS company, e.start_date FROM experience e JOIN companies c ON c.id = e.company_id WHERE e.end_date IS NULL;'],
     ['risk assessment platform', 'SELECT * FROM case_studies WHERE slug = \'risk-assessment\';'],
-    ['what I\'ve built', 'SELECT name, summary, repo_url FROM projects;'],
-    ['help', 'help']
+    ['what I\'ve built', 'SELECT name, summary, repo_url FROM projects;']
   ];
   $('chips').innerHTML = CHIPS.map(function (c, i) { return '<button class="chip" type="button" data-chip="' + i + '">' + esc(c[0]) + '</button>'; }).join('');
   $('chips').addEventListener('click', function (e) { var b = e.target.closest('[data-chip]'); if (b) typeThenRun(CHIPS[+b.dataset.chip][1]); });
@@ -373,13 +380,26 @@
   document.addEventListener('click', function (e) {
     var c = e.target.closest('.copy');
     if (c) { copyText(c.dataset.copy); return; }
-    var run = e.target.closest('[data-run]'); if (run) { typeThenRun(run.dataset.run); return; }
+    var run = e.target.closest('[data-run]');
+    if (run) { if (guide.open) closeGuide(); if (easy) setEasy(false); typeThenRun(run.dataset.run); return; }
     var o = e.target.closest('[data-open]'); if (o && stack) openTable(o.dataset.open);
   });
   function copyText(v) {
     var done = function () { toast('Copied ' + v); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done, function () { toast(v); }); else toast(v);
   }
+
+  /* ---------- guide ---------- */
+  var guide = $('guide');
+  function openGuide() {
+    if (guide.showModal) guide.showModal(); else guide.setAttribute('open', '');
+    guide.scrollTop = 0; store('guideSeen', '1'); document.body.classList.add('guide-seen');
+  }
+  function closeGuide() { if (guide.close) guide.close(); else guide.removeAttribute('open'); }
+  if (store('guideSeen')) document.body.classList.add('guide-seen');
+  $('guideBtn').addEventListener('click', openGuide);
+  $('gClose').addEventListener('click', closeGuide);
+  guide.addEventListener('click', function (e) { if (e.target === guide) closeGuide(); });
 
   /* ---------- connect dialog ---------- */
   var dlg = $('connect'), cStatus = $('cStatus');
@@ -414,18 +434,25 @@
     window.location.href = href;
   });
 
+  // One switch for all three views; exactly one tab is selected at any time.
+  function viewName() { return easy ? 'easy-read view' : (mode === 'table' ? 'table view' : 'schema view'); }
+  function paintViews() {
+    $('modeEasy').setAttribute('aria-selected', String(easy));
+    $('modeSchema').setAttribute('aria-selected', String(!easy && mode === 'schema'));
+    $('modeTable').setAttribute('aria-selected', String(!easy && mode === 'table'));
+    $('modeLabel').textContent = viewName();
+  }
   function setMode(m) {
     mode = m;
     body.classList.toggle('mode-table', m === 'table');
-    $('modeSchema').setAttribute('aria-selected', String(m === 'schema'));
-    $('modeTable').setAttribute('aria-selected', String(m === 'table'));
-    $('modeLabel').textContent = m === 'table' ? 'table view' : 'schema view';
+    paintViews();
     $('tableview').hidden = m !== 'table';
     if (m === 'table') { $('tabs').querySelector('button').click(); }
     else { closeResults(); layoutResults(); fit(); }
   }
-  $('modeSchema').addEventListener('click', function () { if (mode !== 'schema') setMode('schema'); });
-  $('modeTable').addEventListener('click', function () { if (mode !== 'table') setMode('table'); });
+  $('modeSchema').addEventListener('click', function () { if (easy) setEasy(false); if (mode !== 'schema') setMode('schema'); });
+  $('modeTable').addEventListener('click', function () { if (easy) setEasy(false); if (mode !== 'table') setMode('table'); });
+  $('modeEasy').addEventListener('click', function () { setEasy(true); });
 
   /* ---------- easy-read view: the same data as one plain page, no clicking ---------- */
   var EASY = window.EASY || { jobs: {}, projects: {}, categories: {}, stats: [] }, easy = false, easyBuilt = false;
@@ -504,7 +531,7 @@
           '<button class="copy ez-copy" type="button" data-copy="' + esc(c.value) + '">Copy</button></dd></div>';
       }).join('') + '</dl><p class="ez-cta"><button class="btn accent" type="button" data-connect>Send me a message</button></p>');
 
-    h += '<footer class="ez-foot ez-wrap"><div class="ez-body"><p>The technical version is the <b>Database-system view</b> at the top: query this page like a database.</p>' +
+    h += '<footer class="ez-foot ez-wrap"><div class="ez-body"><p>The technical version is the <b>Schema</b> and <b>Table</b> views at the top: query this page like a database.</p>' +
       '<p>For AI agents and crawlers, <a href="agents.md">agents.md</a> has everything above as structured text.</p></div></footer>';
     return h;
   }
@@ -514,13 +541,11 @@
     easy = on;
     if (on && !easyBuilt) { $('easy').innerHTML = buildEasy(); easyBuilt = true; }
     body.classList.toggle('easy-on', on);
-    var b = $('easyBtn'); b.textContent = on ? 'Database-system view' : 'Easy-read view'; b.setAttribute('aria-pressed', String(on));
-    $('modeLabel').textContent = on ? 'easy-read view' : (mode === 'table' ? 'table view' : 'schema view');
+    paintViews();
     if (on) { window.scrollTo(0, 0); $('ezTitle').focus({ preventScroll: true }); }
     else { fit(); layoutResults(); drawLinks(); }
-    if (!quiet) { try { history.replaceState(null, '', on ? '#easy' : location.pathname + location.search); } catch (e) {} }
+    if (!quiet) { try { history.replaceState(null, '', on ? '#easy' : (isPhone() ? '#schema' : location.pathname + location.search)); } catch (e) {} }
   }
-  $('easyBtn').addEventListener('click', function () { setEasy(!easy); });
   window.addEventListener('hashchange', function () { setEasy(location.hash === '#easy', true); });
   document.addEventListener('click', function (e) { if (e.target.closest('[data-connect]')) $('connectBtn').click(); });
 
@@ -553,7 +578,7 @@
     if (typing) { ki = 0; }
     else { ki = k === KON[ki] ? ki + 1 : (k === KON[0] ? 1 : 0); if (ki === KON.length) { ki = 0; var dark = document.documentElement.dataset.theme !== 'dark'; setTheme(dark ? 'dark' : 'light'); toast(dark ? 'secrets unlocked: dark mode' : 'back to the light'); } }
     if (e.key === '/' && !typing && !easy && document.activeElement !== q) { e.preventDefault(); q.focus(); }
-    if (e.key === 'Escape' && !dlg.open) { if (document.activeElement === q && q.value) q.value = ''; else closeResults(); }
+    if (e.key === 'Escape' && !dlg.open && !guide.open) { if (document.activeElement === q && q.value) q.value = ''; else closeResults(); }
   });
 
   $('statusDot').addEventListener('click', function () {
@@ -566,11 +591,23 @@
     console.log('%cKailash Ramakrishnan%c\nYou found the console. Try typing  help  in the query bar, or the Konami code on the page.\n' + SITE.email, 'font:700 16px monospace;color:#B8420F', 'font:12px monospace');
   } catch (e) {}
 
+  /* ---------- placeholder hints ---------- */
+  (function () {
+    var hints = ["SELECT * FROM experience;", "SELECT name FROM skills WHERE category = 'database';", "SELECT name, repo_url FROM projects;", "\\dt"], n = 0, used = false;
+    q.addEventListener('focus', function () { used = true; });
+    if (reduce) return;
+    setInterval(function () {
+      if (used || q.value || easy || document.hidden) return;
+      n = (n + 1) % hints.length; q.placeholder = hints[n];
+    }, 3400);
+  })();
+
   /* ---------- boot ---------- */
   if (store('theme') === 'dark') setTheme('dark');
   buildCards();
   fit();
-  if (location.hash === '#easy') setEasy(true, true);
+  // Phones open on the easy-read page; #schema keeps a phone visitor on the diagram after a reload.
+  if (location.hash === '#easy' || (!location.hash && isPhone())) setEasy(true, true);
   window.addEventListener('resize', function () { fit(); layoutResults(); });
   if (window.ResizeObserver) { var ro = new ResizeObserver(function () { drawLinks(); }); ORDER.forEach(function (t) { ro.observe(cards[t]); }); }
   document.fonts && document.fonts.ready.then(function () { drawLinks(); });

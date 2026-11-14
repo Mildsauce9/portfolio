@@ -16,7 +16,6 @@ colors:
   on-kiln-orange: "#FFFFFF"
   schema-green: "#1F7A5C"
   syntax-keyword: "#1F6FB0"
-  syntax-string: "#8A6A00"
   syntax-number: "#1E7F78"
   error-red: "#B02A27"
   paper-night: "#002B36"
@@ -132,13 +131,13 @@ Solarized paper and ink, with a single kiln-orange accent and a quiet set of syn
 
 ### Primary
 - **Kiln Orange** (#B8420F, dark theme #E0693A): the one voice. Links, the active card border and tab, focus rings, the "Easy-read view" outline button, and the single filled primary action ("Connect with me"). Text on it is white (#FFFFFF, dark theme uses ink-on-paper #002B36).
-- **Kiln Orange Soft** (#F6E3D2): the tint behind a selected row or the pressed easy-read toggle.
+- **Kiln Orange Soft** (#F6E3D2): a brief highlight only, such as the one-time nudge on the query chips. It is never a resting or selected state.
 
 ### Secondary
 - **Schema Green** (#1F7A5C): table-name tags on diagram cards and the "connected" status dot. It means "this is a table", nothing else.
 
 ### Tertiary
-- **Syntax Blue** (#1F6FB0), **Syntax Ochre** (#8A6A00), **Syntax Teal** (#1E7F78): SQL keywords, string values and numbers inside cards and result grids. They colour code, never chrome.
+- **Syntax Blue** (#1F6FB0) and **Syntax Teal** (#1E7F78): SQL keywords and numbers. Text values are plain Ink Secondary, with no gold or other colour. They colour code, never chrome.
 - **Error Red** (#B02A27): failed queries and form errors only.
 
 ### Neutral
@@ -148,9 +147,9 @@ Solarized paper and ink, with a single kiln-orange accent and a quiet set of syn
 - **Rule** (#D3C9AA) and **Rule Soft** (#E8DFC4): borders and hairline dividers. Soft is for dividers inside a surface.
 
 ### Named Rules
-**The One Voice Rule.** Kiln Orange marks links and the current state, and nothing else. It never colours stats, list markers, headings or decoration.
+**The One Voice Rule.** Kiln Orange marks links, the current view and the one primary action, and nothing else. It never colours stats, list markers, headings, decoration or selected table rows.
 
-**The Syntax Is Data Rule.** Blue, ochre and teal appear only on SQL and values, where they carry meaning. They are never used to decorate a heading or button.
+**The Syntax Is Data Rule.** Blue and teal appear only on SQL keywords and numbers, where they carry meaning. Text values stay neutral, and neither colour decorates a heading or button.
 
 ## Typography
 
@@ -218,12 +217,13 @@ Small, even corners, with a thin border around anything that holds content. Card
 - **Internal Padding:** rows are 9px 14px with 1px soft dividers; foreign-key footers use a dashed top rule.
 
 ### Inputs / Fields
-- **Style:** the SQL bar is a 56px, 6px-radius box with an Ink border, a Kiln Orange `›` prompt and a mono 15px field. Dialog fields are 6px, Paper-filled, with a Rule border.
+- **Style:** the SQL bar is a 56px, 6px-radius box with an Ink border, a Kiln Orange `›` prompt, a mono 15px field and a clear (×) button that appears once there is text. Its placeholder cycles through example queries until the field is first focused. On touch screens the keyboard closes after a query runs. Dialog fields are 6px, Paper-filled, with a Rule border.
 - **Focus:** border and caret turn Kiln Orange and the bar gains the Active shadow. Everywhere else, a 2px Kiln Orange outline with a 2px offset.
 - **Error / Disabled:** errors use Error Red text in the status line or results panel.
 
 ### Navigation
-- **Style:** a transparent top bar with the brand path (`kailash@portfolio / public / schema view`) in mono at left, a Schema/Table segmented toggle in the centre, and links at right. On narrow screens the path shortens and then disappears. In easy-read the bar gets a Paper fill and a 1px rule.
+- **Style:** a transparent top bar with the brand path (`kailash@portfolio / public / schema view`) in mono at left, a three-way view switch in the centre (Easy-read, Schema, Table, each with an icon, the current one raised with an orange icon), and a Guide button, GitHub, LinkedIn and Connect at right, all with icons. The switch stays visible in every view. Below 640px the labels drop and only the icons remain. In easy-read the bar gets a Paper fill and a 1px rule.
+- **Guide:** a quiet bordered button with a "?" icon and a small orange dot that pings a few times until the Guide has been opened once. It opens a dialog covering the views, the diagram, rows, the SQL box and its shortcuts. Typing `help` in the query box opens the same dialog.
 
 ### Schema Card (signature)
 A database table rendered as a card: green tag, row count, rows of name and value in mono, a dashed foreign-key footer, and dashed links to related cards. It is the system's signature, and the diagram view is built entirely from it.
@@ -236,7 +236,10 @@ In easy-read, a definition-list row: a 9rem mono label in Ink Muted beside a ser
 ### Do:
 - **Do** set prose in Source Serif 4 and data, labels and controls in JetBrains Mono.
 - **Do** use hairline rules and whitespace to group content in easy-read.
-- **Do** keep Kiln Orange to links, the current state, focus and the one primary action per view.
+- **Do** keep Kiln Orange to links, the current view, focus and the one primary action per view.
+- **Do** mark hovered and selected table rows with the neutral Card Header tint, and open a row's detail directly beneath it.
+- **Do** invite interaction with quiet cues (an "open ›" on card headers, a chevron on rows, a one-time nudge), and stop once the visitor has acted.
+- **Do** make phones open on the easy-read view.
 - **Do** give every shadow an offset and a soft blur, and lift only on state.
 - **Do** keep body text to 38em, and keep the easy-read column readable at 375px with no horizontal scroll.
 - **Do** keep both views in step with `js/data.js` and `agents.md`, and keep numbers and claims exactly as written.
@@ -247,3 +250,5 @@ In easy-read, a definition-list row: a 9rem mono label in Ink Muted beside a ser
 - **Don't** use pill-shaped tags, uppercase tracked kicker labels above headings, or thick accent stripes on cards.
 - **Don't** add a third typeface or a display face.
 - **Don't** colour decoration with the syntax colours or Kiln Orange.
+- **Don't** use gold or orange text or row fills in tables.
+- **Don't** hide an answer far from the click that asked for it.
