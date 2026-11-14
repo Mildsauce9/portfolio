@@ -1,0 +1,12 @@
+.agents
+.claude
+.codex
+.impeccable
+.git
+.gitignore
+.assetsignore
+wrangler.jsonc
+DESIGN.md
+PRODUCT.md
+agents.md
+skills-lock.json
