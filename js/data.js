@@ -8,7 +8,7 @@
     name: 'Kailash Ramakrishnan',
     headline: 'Backend AI Engineer. Go, Python, PostgreSQL.',
     location: 'Dubai, UAE',
-    summary: 'I own production systems end to end: requirements, design, code, deployment and on-call. Right now that means fraud, AML and compliance pipelines at Deriv.'
+    summary: 'I own production systems end to end: requirements, design, code, deployment and on-call. Right now that means risk assessment, AML and compliance pipelines at Deriv.'
   }];
 
   var companies = [
@@ -20,8 +20,8 @@
   // Skill catalog: one row per technology, referenced by experience and projects.
   var catalog = {
     language: ['Go', 'Python', 'SQL', 'JavaScript', 'C#', 'HTML', 'CSS'],
-    backend: ['FastAPI', 'Flask', 'Django', 'React', 'Next.js', 'TypeScript', '.NET Core', 'REST APIs', 'API gateway security', 'Docker', 'OAuth', 'Gmail API', 'Tilt', 'sqlc'],
-    ai: ['LLM APIs', 'OpenAI', 'Gemini', 'RAG pipelines', 'Agent orchestration', 'Tool calling', 'MCP', 'Semantic search', 'Vector databases', 'Pinecone', 'LangChain', 'LangGraph'],
+    backend: ['FastAPI', 'REST APIs', 'OAuth', 'API gateway security', 'Flask', 'React', 'Next.js', 'TypeScript', '.NET Core', 'Docker', 'Gmail API', 'Tilt', 'sqlc'],
+    ai: ['Vector storage', 'Caching', 'Prompt engineering', 'Agentic workflows', 'LLM APIs', 'OpenAI', 'Gemini', 'RAG pipelines', 'Agent orchestration', 'Tool calling', 'MCP', 'Semantic search', 'Pinecone', 'LangChain', 'LangGraph'],
     database: ['PostgreSQL', 'Citus columnar', 'Redis', 'MongoDB', 'SQLite', 'Query optimization', 'Streaming ETL'],
     cloud: ['GCP', 'GKE', 'CloudSQL', 'GitHub Actions', 'OpenTelemetry'],
     practice: ['AI-assisted engineering', 'Code review', 'System design', 'Performance tuning', 'Data structures and algorithms']
@@ -36,11 +36,11 @@
       company_id: 1, title: 'AI Engineer', start_date: '2025-12', end_date: null,
       stack: ['Go', 'Python', 'PostgreSQL', 'Citus columnar', 'Redis', 'GKE', 'OpenTelemetry', 'Agent orchestration'],
       h: [
-        'Embedded with compliance, finance and anti-fraud teams: studied each manual workflow first, then turned stakeholder SOPs into production systems and AI agents.',
-        'Built AI agents for AML, compliance and fraud that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work done by three people.',
-        'Built the anti-fraud platform from scratch: an OLTP database turned into a low-cost columnar analytical store for near real-time analysis of high-volume trading and payment data, fed by streaming ingestion that powers fraud signals and client clustering.',
-        'Cut a fraud container\'s CPU load from 300% to 85% by running backfill, detection and materialized-view generation in parallel with throttling.',
-        'Built a CEP rule engine on a blue-green deployment that backfills a month or more of history whenever a new fraud rule ships, without lock contention or deadlocks on WAL-replayed replicas.',
+        'Embedded with compliance, finance and risk assessment teams: studied each manual workflow first, then turned stakeholder SOPs into production systems and AI agents.',
+        'Built AI agents for AML, compliance and risk assessment that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work that used to span departments: risk assessment, contact initiation, and the conversation and closing of CX tickets for the same case.',
+        'Built the risk assessment platform from scratch: an OLTP database turned into a low-cost columnar analytical store for near real-time analysis of high-volume customer behavior data, fed by streaming ingestion that powers risk assessment signals and client clustering.',
+        'Cut a risk assessment container\'s CPU load from 300% to 85% by running backfill, detection and materialized-view generation in parallel with throttling.',
+        'Built a CEP rule engine on a blue-green deployment that backfills a month or more of history whenever a new risk assessment rule ships, without lock contention or deadlocks on WAL-replayed replicas.',
         'Built a vector-similarity detector that catches duplicate account registrations at onboarding, before they reach end users.',
         'Built AML monitoring that aggregates client activity over rolling windows, flags threshold breaches and generates compliance reports. A geolocation monitor flags access that conflicts with a client\'s declared jurisdiction and starts enhanced due diligence outreach.',
         'Designed idempotent ingestion with watermark cursors that advance only after commit. Restored the trading database after a low-disk outage with no data loss.',
@@ -110,7 +110,8 @@
     title: 'Ensemble Transfer Learning for Accurate Malaria Detection with Stage Classification & Explainable AI',
     venue: 'MoSICom (IEEE)', year: 2024, doi: '10.1109/MoSICom60525.2024.10881070',
     url: 'https://ieeexplore.ieee.org/document/10881070',
-    code_url: 'https://github.com/Mildsauce9/Ensemble-Transfer-Learning-for-Accurate-Malaria-Detection-with-Stage-Classification-Explainable-AI.-'
+    code_url: 'https://github.com/Mildsauce9/Ensemble-Transfer-Learning-for-Accurate-Malaria-Detection-with-Stage-Classification-Explainable-AI.-',
+    summary: 'First author. Combines several pretrained CNNs (VGG16, VGG19, MobileNetV2, Xception, InceptionV3 and a custom model) by weighted majority voting to detect malaria and classify the infection stage (ring, trophozoite, schizont) from blood smears, with Grad-CAM explanations. Single models fell short (68% for VGG19, 78% for Xception); the ensemble reached 80% to 91% accuracy per class on a 600-image test set from BBBC041v1.'
   }];
 
   var contact = [
@@ -120,8 +121,8 @@
   ];
 
   var case_studies = [{
-    id: 1, experience_id: 1, slug: 'fraud', title: 'Anti-fraud platform',
-    summary: 'One system for fraud that used to need manual intervention and several separate alerting tools.'
+    id: 1, experience_id: 1, slug: 'risk-assessment', title: 'Risk assessment platform',
+    summary: 'One system for risk assessment that used to need manual intervention and several separate alerting tools.'
   }];
 
   function T(cols, rows) { return { cols: cols, rows: rows }; }
@@ -136,7 +137,7 @@
     project_skills_mapping: T(['project_id', 'skill_id'], project_skills_mapping),
     education: T(['id', 'profile_id', 'degree', 'school', 'location'], education),
     coursework: T(['id', 'education_id', 'name'], coursework),
-    publications: T(['id', 'profile_id', 'title', 'venue', 'year', 'doi', 'url', 'code_url'], publications),
+    publications: T(['id', 'profile_id', 'title', 'venue', 'year', 'doi', 'url', 'code_url', 'summary'], publications),
     contact: T(['id', 'profile_id', 'channel', 'value', 'href'], contact),
     case_studies: T(['id', 'experience_id', 'slug', 'title', 'summary'], case_studies)
   };

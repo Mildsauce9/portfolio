@@ -1,0 +1,3 @@
+# Crawlers and AI agents are welcome. The full profile as text is agents.md.
+User-agent: *
+Allow: /

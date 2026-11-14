@@ -31,9 +31,10 @@
   function link(href, text) { return '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(text) + '</a>'; }
 
   /* ---------- cards ---------- */
-  function preview(list) {
+  function preview(list, max, cap) {
     var out = [], len = 0;
-    for (var i = 0; i < list.length && i < 3; i++) { len += list[i].length + 2; if (i && len > 30) break; out.push(list[i]); }
+    max = max || 3; cap = cap || 30;
+    for (var i = 0; i < list.length && i < max; i++) { len += list[i].length + 2; if (i && len > cap) break; out.push(list[i]); }
     return out.join(', ');
   }
   function footer(t) {
@@ -59,7 +60,7 @@
     });
     if (t === 'skills') {
       var by = {}, ord = []; r.forEach(function (s) { if (!by[s.category]) { by[s.category] = []; ord.push(s.category); } by[s.category].push(s.name); });
-      ord.forEach(function (c) { h += '<div class="rw"><span class="mute">' + c + '</span><span>' + esc(preview(by[c])) + '</span></div>'; });
+      ord.forEach(function (c) { h += '<div class="rw"><span class="mute">' + c + '</span><span>' + esc(c === 'ai' ? preview(by[c], 4, 80) : preview(by[c])) + '</span></div>'; });
     }
     if (t === 'projects') {
       r.slice(0, 4).forEach(function (x) { h += '<div class="rw"><span>' + esc(x.name) + '</span></div>'; });
@@ -248,7 +249,7 @@
 
   function tags(list) { return list.length ? '<div class="tags">' + list.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : ''; }
   function detailBox(eyebrow, title, items, extra) {
-    return '<div class="detail"><div class="eyebrow">' + esc(eyebrow) + '</div><h3>' + esc(title) + '</h3>' +
+    return '<div class="detail"><h3>' + esc(title) + '</h3><div class="eyebrow">' + esc(eyebrow) + '</div>' +
       (items && items.length ? '<ul>' + items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + (extra || '') + '</div>';
   }
   // Detail panel under the grid: follows foreign keys from the selected row.
@@ -263,7 +264,7 @@
     }
     if (table === 'projects') return detailBox('project · ' + s.kind, s.name, [s.summary], tags(skillsVia('project_skills_mapping', 'project_id', s.id)) +
       (s.repo_url ? '<div class="links-row">' + link(s.repo_url, 'View the code on GitHub ↗') + '</div>' : '<div class="note-s">No public repo for this one yet.</div>'));
-    if (table === 'publications') return detailBox(s.venue + ' · ' + s.year, s.title, ['DOI ' + s.doi],
+    if (table === 'publications') return detailBox(s.venue + ' · ' + s.year, s.title, [s.summary, 'DOI ' + s.doi],
       '<div class="links-row">' + link(s.url, 'Read the paper on IEEE Xplore ↗') + link(s.code_url, 'Model weights on GitHub ↗') + '</div>');
     if (table === 'education') return detailBox(s.school + ', ' + s.location, s.degree, where('coursework', 'education_id', s.id).map(function (x) { return x.name; }));
     if (table === 'case_studies') return window.CASES[s.slug] ? '<div class="detail">' + window.CASES[s.slug] + '</div>' : '';
@@ -345,7 +346,7 @@
   /* ---------- chips, tabs, buttons ---------- */
   var CHIPS = [
     ['my current role', 'SELECT e.title, c.name AS company, e.start_date FROM experience e JOIN companies c ON c.id = e.company_id WHERE e.end_date IS NULL;'],
-    ['fraud platform', 'SELECT * FROM case_studies WHERE slug = \'fraud\';'],
+    ['risk assessment platform', 'SELECT * FROM case_studies WHERE slug = \'risk-assessment\';'],
     ['what I\'ve built', 'SELECT name, summary, repo_url FROM projects;'],
     ['help', 'help']
   ];
@@ -426,6 +427,103 @@
   $('modeSchema').addEventListener('click', function () { if (mode !== 'schema') setMode('schema'); });
   $('modeTable').addEventListener('click', function () { if (mode !== 'table') setMode('table'); });
 
+  /* ---------- easy-read view: the same data as one plain page, no clicking ---------- */
+  var EASY = window.EASY || { jobs: {}, projects: {}, categories: {}, stats: [] }, easy = false, easyBuilt = false;
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function ym(s) { var p = s.split('-'); return { y: +p[0], m: +p[1] }; }
+  function monthYear(s) { var d = ym(s); return MONTHS[d.m - 1] + ' ' + d.y; }
+  function timeSpent(a, b) {
+    var s = ym(a), n = new Date(), e = b ? ym(b) : { y: n.getFullYear(), m: n.getMonth() + 1 };
+    var t = (e.y - s.y) * 12 + e.m - s.m + 1, out = [], y = Math.floor(t / 12), m = t % 12;
+    if (y) out.push(plural(y, 'year')); if (m) out.push(plural(m, 'month'));
+    return out.join(' ') || '1 month';
+  }
+  function ezList(list) { return list.length ? esc(list.join(', ')) : ''; }
+  function ezLinks(list) { return '<p class="ez-links">' + list.map(function (l) { return link(l[0], l[1]); }).join('') + '</p>'; }
+  function ezSection(id, title, inner) {
+    return '<section class="ez-sec" aria-labelledby="ez-' + id + '"><div class="ez-wrap"><h2 id="ez-' + id + '">' + esc(title) + '</h2><div class="ez-body">' + inner + '</div></div></section>';
+  }
+  function ezRows(rows) {
+    return '<dl class="ez-rows">' + rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') + '</dl>';
+  }
+
+  function buildEasy() {
+    var p = DB.profile.rows[0], edu = DB.education.rows[0], pub = DB.publications.rows[0];
+    var cur = DB.experience.rows.filter(function (e) { return e.end_date === null; })[0];
+    var h = '<header class="ez-hero ez-wrap"><h1 id="ezTitle" tabindex="-1">' + esc(p.name) + '</h1>' +
+      '<p class="ez-role">' + esc(EASY.role || p.headline) + ', ' + esc(p.location) + '</p>' +
+      '<p class="ez-lead">' + esc(EASY.intro || p.summary) + '</p>' +
+      ezRows([
+        ['Right now', esc(cur.title + ' at ' + byId('companies', cur.company_id).name + ', since ' + monthYear(cur.start_date))],
+        ['Main tools', esc(EASY.mainTools || '')],
+        ['Studied', esc(edu.degree + ', ' + edu.school)],
+        ['Published', esc(plural(DB.publications.rows.length, 'research paper') + ', first author, ' + pub.year)]
+      ]) + '</header>';
+
+    if (EASY.stats.length) h += ezSection('numbers', 'Results',
+      '<ul class="ez-results">' + EASY.stats.map(function (s) {
+        var feat = s.featured, fig = /\d/.test(s.num);
+        return '<li' + (feat ? ' class="ez-lead-result"' : '') + '><h3>' + (fig ? '<span class="ez-fig">' + esc(s.num) + '</span> ' : '') + esc(s.label) + '</h3><p>' + esc(s.detail) + '' + (feat ? '' : ' <span class="ez-src">' + esc(s.source) + '</span>') + '</p>' +
+          (feat && s.facts ? ezRows(s.facts.map(function (f) { return [f[0], esc(f[1])]; })) : '') +
+          (feat ? ezLinks([[pub.url, 'Read the paper'], [pub.code_url, 'Code and model']]) : '') + '</li>';
+      }).join('') + '</ul>');
+
+    h += ezSection('work', 'Experience',
+      DB.experience.rows.map(function (e) {
+        var co = byId('companies', e.company_id), j = EASY.jobs[e.id] || {};
+        var pts = j.points || where('highlights', 'experience_id', e.id).sort(function (a, b) { return a.position - b.position; }).map(function (x) { return x.text; });
+        return '<article class="ez-job"><h3>' + esc(e.title) + ', ' + esc(co.name) + '</h3>' +
+          '<p class="ez-meta">' + esc(monthYear(e.start_date) + ' to ' + (e.end_date ? monthYear(e.end_date) : 'now') + ' (' + timeSpent(e.start_date, e.end_date) + '), ' + co.location) + '</p>' +
+          (j.blurb ? '<p class="ez-blurb">' + esc(j.blurb) + '</p>' : '') +
+          '<ul class="ez-list">' + pts.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
+          '<p class="ez-meta"><span class="ez-lbl">Tools</span> ' + ezList(skillsVia('experience_skills_mapping', 'experience_id', e.id)) + '</p></article>';
+      }).join(''));
+
+    h += ezSection('projects', 'Personal projects',
+      '<ul class="ez-projects">' + DB.projects.rows.map(function (x) {
+        var tools = ezList(skillsVia('project_skills_mapping', 'project_id', x.id));
+        return '<li><h3>' + (x.repo_url ? link(x.repo_url, x.name) : esc(x.name)) + '</h3><p>' + esc(EASY.projects[x.name] || x.summary) + '</p>' +
+          '<p class="ez-meta">' + (tools ? '<span class="ez-lbl">Made with</span> ' + tools : '') + (x.repo_url ? '' : (tools ? '. ' : '') + 'No public code.') + '</p></li>';
+      }).join('') + '</ul>');
+
+    h += ezSection('research', 'Research',
+      '<article class="ez-pub"><h3>' + esc(pub.title) + '</h3><p class="ez-meta">' + esc(pub.venue + ', ' + pub.year + '. DOI ' + pub.doi) + '</p><p>' + esc(EASY.publication || '') + '</p>' +
+      ezLinks([[pub.url, 'Read the paper'], [pub.code_url, 'Code and model']]) + '</article>');
+
+    h += ezSection('education', 'Education',
+      '<h3>' + esc(edu.degree) + '</h3><p class="ez-meta">' + esc(edu.school + ', ' + edu.location) + '</p>' +
+      '<p class="ez-meta"><span class="ez-lbl">Subjects</span> ' + ezList(where('coursework', 'education_id', edu.id).map(function (c) { return c.name; })) + '</p>');
+
+    var by = {}, cats = []; DB.skills.rows.forEach(function (s) { if (!by[s.category]) { by[s.category] = []; cats.push(s.category); } by[s.category].push(s.name); });
+    h += ezSection('skills', 'Skills', ezRows(cats.map(function (c) { return [EASY.categories[c] || c, ezList(by[c])]; })));
+
+    h += ezSection('contact', 'Contact',
+      '<dl class="ez-rows ez-contact">' + DB.contact.rows.map(function (c) {
+        var val = c.channel === 'linkedin' ? c.value.replace('linkedin.com/', '') : c.value;
+        return '<div><dt>' + esc(c.channel) + '</dt><dd><a href="' + esc(c.href) + '"' + (c.href.indexOf('http') === 0 ? ' target="_blank" rel="noopener"' : '') + '>' + esc(val) + '</a> ' +
+          '<button class="copy ez-copy" type="button" data-copy="' + esc(c.value) + '">Copy</button></dd></div>';
+      }).join('') + '</dl><p class="ez-cta"><button class="btn accent" type="button" data-connect>Send me a message</button></p>');
+
+    h += '<footer class="ez-foot ez-wrap"><div class="ez-body"><p>The technical version is the <b>Database-system view</b> at the top: query this page like a database.</p>' +
+      '<p>For AI agents and crawlers, <a href="agents.md">agents.md</a> has everything above as structured text.</p></div></footer>';
+    return h;
+  }
+
+  function setEasy(on, quiet) {
+    if (on === easy) return;
+    easy = on;
+    if (on && !easyBuilt) { $('easy').innerHTML = buildEasy(); easyBuilt = true; }
+    body.classList.toggle('easy-on', on);
+    var b = $('easyBtn'); b.textContent = on ? 'Database-system view' : 'Easy-read view'; b.setAttribute('aria-pressed', String(on));
+    $('modeLabel').textContent = on ? 'easy-read view' : (mode === 'table' ? 'table view' : 'schema view');
+    if (on) { window.scrollTo(0, 0); $('ezTitle').focus({ preventScroll: true }); }
+    else { fit(); layoutResults(); drawLinks(); }
+    if (!quiet) { try { history.replaceState(null, '', on ? '#easy' : location.pathname + location.search); } catch (e) {} }
+  }
+  $('easyBtn').addEventListener('click', function () { setEasy(!easy); });
+  window.addEventListener('hashchange', function () { setEasy(location.hash === '#easy', true); });
+  document.addEventListener('click', function (e) { if (e.target.closest('[data-connect]')) $('connectBtn').click(); });
+
   /* ---------- theme, toast, confetti, easter eggs ---------- */
   function setTheme(t) {
     document.documentElement.dataset.theme = t === 'dark' ? 'dark' : 'light';
@@ -454,7 +552,7 @@
     var typing = e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName) && (e.target !== q || q.value);
     if (typing) { ki = 0; }
     else { ki = k === KON[ki] ? ki + 1 : (k === KON[0] ? 1 : 0); if (ki === KON.length) { ki = 0; var dark = document.documentElement.dataset.theme !== 'dark'; setTheme(dark ? 'dark' : 'light'); toast(dark ? 'secrets unlocked: dark mode' : 'back to the light'); } }
-    if (e.key === '/' && !typing && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+    if (e.key === '/' && !typing && !easy && document.activeElement !== q) { e.preventDefault(); q.focus(); }
     if (e.key === 'Escape' && !dlg.open) { if (document.activeElement === q && q.value) q.value = ''; else closeResults(); }
   });
 
@@ -472,6 +570,7 @@
   if (store('theme') === 'dark') setTheme('dark');
   buildCards();
   fit();
+  if (location.hash === '#easy') setEasy(true, true);
   window.addEventListener('resize', function () { fit(); layoutResults(); });
   if (window.ResizeObserver) { var ro = new ResizeObserver(function () { drawLinks(); }); ORDER.forEach(function (t) { ro.observe(cards[t]); }); }
   document.fonts && document.fonts.ready.then(function () { drawLinks(); });
