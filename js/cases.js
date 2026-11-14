@@ -6,20 +6,20 @@
   function lane(n, title, nodes) { return '<div class="lane"><div class="lane-h"><i>' + n + '</i>' + title + '</div>' + nodes.join(arr) + '</div>'; }
 
   window.CASES = {
-    fraud:
+    'risk-assessment':
       '<div class="case">' +
-        '<div class="eyebrow">Case study · Deriv · anti-fraud platform</div>' +
-        '<h3>One system for fraud that used to need manual intervention and several alerting tools</h3>' +
+        '<h3>One system for risk assessment that used to need manual intervention and several alerting tools</h3>' +
+        '<div class="eyebrow">Case study · Deriv · risk assessment platform</div>' +
         '<div class="lanes">' +
           lane(1, 'Ingest', [
-            node('Trading and payment data', 'live OLTP sources'),
+            node('Customer behavior data', 'live OLTP sources'),
             node('Streaming ingestion', 'idempotent · watermark cursors advance only after commit'),
             node('Columnar analytical store', 'Postgres + Citus · near real-time analysis')
           ]) +
           lane(2, 'Detect', [
             node('CEP rule engine', 'blue-green deployment · a new rule backfills a month or more of history in parallel'),
-            node('Fraud scoring', 'Go workers score clients on their money-movement patterns'),
-            node('Live materialized views', 'fraud signals and client clustering')
+            node('Risk assessment scoring', 'Go workers score clients on their money-movement patterns'),
+            node('Live materialized views', 'risk assessment signals and client clustering')
           ]) +
           lane(3, 'Serve', [
             node('Central Go data-access layer', 'endpoints for analysts and agents · machine-to-machine auth'),

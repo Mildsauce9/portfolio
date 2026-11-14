@@ -1,0 +1,11 @@
+# Kailash Ramakrishnan
+
+> Backend AI Engineer in Dubai, UAE. Go, Python, PostgreSQL. Builds risk assessment, AML and compliance systems and AI agents.
+
+## Profile
+
+- [agents.md](agents.md): the complete profile as structured markdown: experience, measured results, projects, publication, education, skills and contact details.
+
+## Site
+
+- [Portfolio](index.html): interactive database-style portfolio. Add `#easy` to the address for the plain-language, single-page version.
