@@ -1,3 +1,5 @@
 # Crawlers and AI agents are welcome. The full profile as text is agents.md.
 User-agent: *
 Allow: /
+
+Sitemap: https://kailashr.dev/sitemap.xml

@@ -469,3 +469,6 @@ html { scrollbar-color: var(--dot) transparent; }
 .guide .g-keys code, .guide .g-keys kbd { background: none; border: 0; padding: 0; }
 .guide .g-keys kbd + kbd { margin-left: 6px; }
 @media (max-width: 560px) { .g-keys > div { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Crawlable text summary for search engines and screen readers; the visual UI is built by JS. */
+.seo-static { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
