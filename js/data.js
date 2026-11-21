@@ -37,17 +37,15 @@
       stack: ['Go', 'Python', 'PostgreSQL', 'Citus columnar', 'Redis', 'GKE', 'OpenTelemetry', 'Agent orchestration'],
       h: [
         'Embedded with compliance, finance and risk assessment teams: studied each manual workflow first, then turned stakeholder SOPs into production systems and AI agents.',
-        'Built AI agents for AML, compliance and risk assessment that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work that used to span departments: risk assessment, contact initiation, and the conversation and closing of CX tickets for the same case.',
-        'Built the risk assessment platform from scratch: an OLTP database turned into a low-cost columnar analytical store for near real-time analysis of high-volume customer behavior data, fed by streaming ingestion that powers risk assessment signals and client clustering.',
-        'Cut a risk assessment container\'s CPU load from 300% to 85% by running backfill, detection and materialized-view generation in parallel with throttling.',
-        'Built a CEP rule engine on a blue-green deployment that backfills a month or more of history whenever a new risk assessment rule ships, without lock contention or deadlocks on WAL-replayed replicas.',
-        'Built a vector-similarity detector that catches duplicate account registrations at onboarding, before they reach end users.',
-        'Built AML monitoring that aggregates client activity over rolling windows, flags threshold breaches and generates compliance reports. A geolocation monitor flags access that conflicts with a client\'s declared jurisdiction and starts enhanced due diligence outreach.',
-        'Designed idempotent ingestion with watermark cursors that advance only after commit. Restored the trading database after a low-disk outage with no data loss.',
+        'Built AI agents for AML, compliance and risk assessment that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work that used to span several departments.',
+        'Built a risk assessment platform from scratch: streaming ingestion and columnar analytics for near real-time analysis of high-volume customer behavior data.',
+        'Built a rule-based detection engine that applies new risk assessment rules to historical data when they ship.',
+        'Built detection for duplicate account registrations at onboarding.',
+        'Built AML monitoring and compliance reporting over client activity.',
         'Built machine-to-machine authentication so agents and services can securely read compliance data, adopted by multiple teams.',
-        'Built ReAct-style agents on OpenClaw that call tools at each step, reason over the results and pick the next action, without a graph orchestration framework.',
-        'Secured the API layer, gateway and web frontend handling client PII against XSS and SQL injection.',
-        'Owns the central Go data-access layer connected to all production databases: requirements, back-tested SQL, monitoring, health checks and incident resolution.'
+        'Built ReAct-style tool-calling agents that reason over results and pick the next action, without a graph orchestration framework.',
+        'Secured the API layer, gateway and web frontend against common web attacks such as XSS and SQL injection.',
+        'Owns a central Go data-access service used across production systems: requirements, testing, monitoring and incident resolution.'
       ]
     },
     {
@@ -120,11 +118,6 @@
     { id: 3, profile_id: 1, channel: 'github', value: 'github.com/Mildsauce9', href: 'https://github.com/Mildsauce9' }
   ];
 
-  var case_studies = [{
-    id: 1, experience_id: 1, slug: 'risk-assessment', title: 'Risk assessment platform',
-    summary: 'One system for risk assessment that used to need manual intervention and several separate alerting tools.'
-  }];
-
   function T(cols, rows) { return { cols: cols, rows: rows }; }
   window.DB = {
     profile: T(['id', 'name', 'headline', 'location', 'summary'], profile),
@@ -138,8 +131,7 @@
     education: T(['id', 'profile_id', 'degree', 'school', 'location'], education),
     coursework: T(['id', 'education_id', 'name'], coursework),
     publications: T(['id', 'profile_id', 'title', 'venue', 'year', 'doi', 'url', 'code_url', 'summary'], publications),
-    contact: T(['id', 'profile_id', 'channel', 'value', 'href'], contact),
-    case_studies: T(['id', 'experience_id', 'slug', 'title', 'summary'], case_studies)
+    contact: T(['id', 'profile_id', 'channel', 'value', 'href'], contact)
   };
 
   // Constraints. pk = primary key columns, fks = foreign keys.
@@ -155,13 +147,12 @@
     education: { pk: ['id'], fks: [{ col: 'profile_id', ref: 'profile.id' }] },
     coursework: { pk: ['id'], fks: [{ col: 'education_id', ref: 'education.id' }] },
     publications: { pk: ['id'], fks: [{ col: 'profile_id', ref: 'profile.id' }] },
-    contact: { pk: ['id'], fks: [{ col: 'profile_id', ref: 'profile.id' }] },
-    case_studies: { pk: ['id'], fks: [{ col: 'experience_id', ref: 'experience.id' }] }
+    contact: { pk: ['id'], fks: [{ col: 'profile_id', ref: 'profile.id' }] }
   };
 
   // Child tables shown in the card footers on the canvas.
   window.CHILDREN = {
-    experience: ['highlights', 'experience_skills_mapping', 'case_studies'],
+    experience: ['highlights', 'experience_skills_mapping'],
     skills: ['experience_skills_mapping', 'project_skills_mapping'],
     projects: ['project_skills_mapping'],
     education: ['coursework']

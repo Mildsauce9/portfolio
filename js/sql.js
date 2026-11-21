@@ -275,7 +275,7 @@
       return msg('Seq Scan on ' + t + '  (cost=0.00..' + (1 + n * 0.02).toFixed(2) + ' rows=' + n + ' width=64)\nPlanning time: 0.1 ms\nExecution time: 0.2 ms\n\nIt is a portfolio. A sequential scan is fine.', 'info');
     }
     if (/('|")\s*or\s*['"]?\w+['"]?\s*=\s*['"]?\w+|--|;\s*(drop|delete|update|insert)/i.test(q) && !/^insert/.test(l))
-      return msg('Nice injection attempt. Queries here are parameterised, and securing a PII-handling API against exactly this is part of my day job. 0 rows.', 'info');
+      return msg('Nice injection attempt. Queries here are parameterised, and securing APIs against exactly this is part of my day job. 0 rows.', 'info');
     if (/^insert\s+into\s+offers/.test(l))
       return msg('INSERT 0 1\nOffer received. Delivery is the old-fashioned way though: use the Connect button, or reachkailash03@gmail.com', 'ok', 'The Connect button is lighting up.', { action: 'confetti' });
     if (/^(drop|truncate|delete|update|alter|create|grant|insert)\b/.test(l)) {

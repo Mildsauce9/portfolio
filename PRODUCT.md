@@ -9,7 +9,7 @@ web
 ## Users
 
 - Hiring managers and recruiters: judge fit for backend AI roles (Go, Python, PostgreSQL) and get in touch.
-- Engineers and tech leads: assess technical depth through the projects and the risk assessment platform case study.
+- Engineers and tech leads: assess technical depth through the projects, the experience section and the blog.
 - AI agents and crawlers: read the same facts as plain text via `agents.md`, `llms.txt` and the `/#easy` view.
 
 ## Product Purpose
@@ -40,7 +40,7 @@ Name: Kailash Ramakrishnan. Title: Backend AI Engineer. Tone is factual and engi
 
 ## Evidence on Hand
 
-Real measured results (in `agents.md`): CPU load cut from 300% to 85% (Deriv); AML agent system replaced the manual work of 3 people; 60% process improvement (Condo Protego); 70% retrieval-time reduction (DocuMentor); 95% query accuracy (Stock Intelligence Chatbot); zero data loss on trading DB restore. Public repositories under github.com/Mildsauce9. One publication: IEEE MoSICom 2024, DOI 10.1109/MoSICom60525.2024.10881070. No testimonials, press or client logos exist; do not fabricate any. Do not alter numbers or claims.
+Real measured results (in `agents.md`): AML agent system replaced manual work spanning several departments (Deriv); 60% process improvement (Condo Protego); 70% retrieval-time reduction (DocuMentor); 95% query accuracy (Stock Intelligence Chatbot). Public repositories under github.com/Mildsauce9. One publication: IEEE MoSICom 2024, DOI 10.1109/MoSICom60525.2024.10881070. No testimonials, press or client logos exist; do not fabricate any. Do not alter numbers or claims.
 
 ## Product Principles
 
