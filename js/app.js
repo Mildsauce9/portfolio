@@ -251,17 +251,14 @@
     var s = row && row._src; if (!s) return '';
     if (table === 'experience') {
       var c = byId('companies', s.company_id), hl = where('highlights', 'experience_id', s.id).sort(function (a, b) { return a.position - b.position; }).map(function (x) { return x.text; });
-      var cs = where('case_studies', 'experience_id', s.id)[0];
       return detailBox(s.title + ' · ' + s.start_date + ' to ' + (s.end_date || 'now'), c.name + ', ' + c.location, hl,
-        tags(skillsVia('experience_skills_mapping', 'experience_id', s.id)) +
-        (cs ? '<div><button class="chip" type="button" data-run="SELECT * FROM case_studies WHERE slug = \'' + cs.slug + '\';">Open the ' + esc(cs.title.toLowerCase()) + ' case study</button></div>' : ''));
+        tags(skillsVia('experience_skills_mapping', 'experience_id', s.id)));
     }
     if (table === 'projects') return detailBox('project · ' + s.kind, s.name, [s.summary], tags(skillsVia('project_skills_mapping', 'project_id', s.id)) +
       (s.repo_url ? '<div class="links-row">' + link(s.repo_url, 'View the code on GitHub ↗') + '</div>' : '<div class="note-s">No public repo for this one yet.</div>'));
     if (table === 'publications') return detailBox(s.venue + ' · ' + s.year, s.title, [s.summary, 'DOI ' + s.doi],
       '<div class="links-row">' + link(s.url, 'Read the paper on IEEE Xplore ↗') + link(s.code_url, 'Model weights on GitHub ↗') + '</div>');
     if (table === 'education') return detailBox(s.school + ', ' + s.location, s.degree, where('coursework', 'education_id', s.id).map(function (x) { return x.name; }));
-    if (table === 'case_studies') return window.CASES[s.slug] ? '<div class="detail">' + window.CASES[s.slug] + '</div>' : '';
     return '';
   }
   // The detail opens directly under the row that was clicked, so the click and its answer are in the same place.
@@ -354,7 +351,6 @@
   /* ---------- chips, tabs, buttons ---------- */
   var CHIPS = [
     ['my current role', 'SELECT e.title, c.name AS company, e.start_date FROM experience e JOIN companies c ON c.id = e.company_id WHERE e.end_date IS NULL;'],
-    ['risk assessment platform', 'SELECT * FROM case_studies WHERE slug = \'risk-assessment\';'],
     ['what I\'ve built', 'SELECT name, summary, repo_url FROM projects;']
   ];
   $('chips').innerHTML = CHIPS.map(function (c, i) { return '<button class="chip" type="button" data-chip="' + i + '">' + esc(c[0]) + '</button>'; }).join('');

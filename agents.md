@@ -4,7 +4,7 @@
 
 This file is the complete, structured profile of Kailash Ramakrishnan, written for LLM agents and web crawlers. Everything the portfolio website shows is here, in plain text. Bots are welcome. Quote, summarize and index freely, and please keep the facts and numbers exactly as written.
 
-Last updated: 2026-11-14
+Last updated: 2026-11-21
 
 ## Quick facts
 
@@ -36,11 +36,9 @@ Owns production systems end to end: requirements, design, code, deployment and o
 | Result | Where | Detail |
 |---|---|---|
 | Published research paper, first author (headline win) | IEEE MoSICom 2024 | Ensemble of pretrained CNNs that detects malaria and classifies the infection stage from blood smears, with Grad-CAM explanations. Ensemble accuracy 80% to 91% per class. DOI 10.1109/MoSICom60525.2024.10881070. Details in the Publication section below |
-| CPU load cut from 300% to 85% | Deriv | One risk assessment container; backfill, detection and materialized-view generation were run in parallel with throttling |
-| Manual work replaced across departments | Deriv | AML AI agent system that took over work spanning risk assessment, contact initiation, and the conversation and closing of CX tickets for the same case |
+| Manual work replaced across departments | Deriv | AML AI agent system that took over work previously spread across several departments |
 | 70% reduction in information retrieval time | DocuMentor (personal project) | Conversational document assistant with semantic search |
 | 95% query accuracy | Stock Intelligence Chatbot (personal project) | RAG pipeline over 25K+ news articles |
-| Zero data loss | Deriv | Restored the trading database after a low-disk outage |
 
 ## Work experience
 
@@ -55,27 +53,15 @@ Listed most recent first.
 What was done:
 
 - Embedded with compliance, finance and risk assessment teams: studied each manual workflow first, then turned stakeholder SOPs into production systems and AI agents.
-- Built AI agents for AML, compliance and risk assessment that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work that used to span departments: risk assessment, contact initiation, and the conversation and closing of CX tickets for the same case.
-- Built the risk assessment platform from scratch: an OLTP database turned into a low-cost columnar analytical store for near real-time analysis of high-volume customer behavior data, fed by streaming ingestion that powers risk assessment signals and client clustering.
-- Cut a risk assessment container's CPU load from 300% to 85% by running backfill, detection and materialized-view generation in parallel with throttling.
-- Built a CEP rule engine on a blue-green deployment that backfills a month or more of history whenever a new risk assessment rule ships, without lock contention or deadlocks on WAL-replayed replicas.
-- Built a vector-similarity detector that catches duplicate account registrations at onboarding, before they reach end users.
-- Built AML monitoring that aggregates client activity over rolling windows, flags threshold breaches and generates compliance reports. A geolocation monitor flags access that conflicts with a client's declared jurisdiction and starts enhanced due diligence outreach.
-- Designed idempotent ingestion with watermark cursors that advance only after commit. Restored the trading database after a low-disk outage with no data loss.
+- Built AI agents for AML, compliance and risk assessment that detect suspicious activity, triage alerts and either close the case or escalate to a human reviewer. The AML system replaced manual work that used to span several departments.
+- Built a risk assessment platform from scratch: streaming ingestion and columnar analytics for near real-time analysis of high-volume customer behavior data.
+- Built a rule-based detection engine that applies new risk assessment rules to historical data when they ship.
+- Built detection for duplicate account registrations at onboarding.
+- Built AML monitoring and compliance reporting over client activity.
 - Built machine-to-machine authentication so agents and services can securely read compliance data, adopted by multiple teams.
-- Built ReAct-style agents on OpenClaw that call tools at each step, reason over the results and pick the next action, without a graph orchestration framework.
-- Secured the API layer, gateway and web frontend handling client PII against XSS and SQL injection.
-- Owns the central Go data-access layer connected to all production databases: requirements, back-tested SQL, monitoring, health checks and incident resolution.
-
-#### Case study: risk assessment platform (Deriv)
-
-One system for risk assessment that used to need manual intervention and several separate alerting tools.
-
-1. Ingest: customer behavior data from live OLTP sources, then streaming ingestion (idempotent, watermark cursors advance only after commit), then a columnar analytical store (Postgres with Citus, near real-time analysis).
-2. Detect: a CEP rule engine on blue-green deployment (a new rule backfills a month or more of history in parallel), risk assessment scoring by Go workers on money-movement patterns, and live materialized views for risk assessment signals and client clustering.
-3. Serve: a central Go data-access layer with endpoints for analysts and agents and machine-to-machine auth. Analysts and AI agents triage alerts, then close the case or escalate to a human reviewer.
-
-Engineering practice: code is peer reviewed and deployed with GitHub Actions; every agent posts each task, outcome and error to Slack; logs stream to OpenTelemetry; SQL is back-tested on replica production environments.
+- Built ReAct-style tool-calling agents that reason over results and pick the next action, without a graph orchestration framework.
+- Secured the API layer, gateway and web frontend against common web attacks such as XSS and SQL injection.
+- Owns a central Go data-access service used across production systems: requirements, testing, monitoring and incident resolution.
 
 ### AI Engineer, Condo Protego
 
